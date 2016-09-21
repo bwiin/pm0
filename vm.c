@@ -36,11 +36,11 @@ typedef struct _instruction{
 }instruction;
 
 // global variable declarations
-FILE *inputfile, *outputfile;
 int stack[MAX_STACK_HEIGHT];// set the stack size( Will be adjusted later since the stack doesn't need to be a global variable
 int sp=0, bp = 1, pc = 0, temp = 0, numOfInstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
 int i = 0, scrap = 0;//possibly redundant variables. used for the loops.
 instruction ir[MAX_STACK_HEIGHT];
+char instructionWord[3];
 
 
 //function declarations.
@@ -54,17 +54,9 @@ void jmp();
 void jpc();
 void sio();
 void lit();
-char *opname(int op);
+char *opname(instruction op);
 void choose();
 int commandParser(char *filename);
-
-
-
-
-
-
-
-
 
 
 void main(int argc, char *argv[]){
@@ -74,40 +66,42 @@ void main(int argc, char *argv[]){
 
 	//function takes in the instruction file and populates the ir stack;
 	ret = commandParser(argv[1]);
-	if ( ret == -1){
+	if (ret == -1){
 		exit(-1);
 	}
 
     for(i = 0; i < numOfInstructions; i++)// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
 		stack[i]=0;
 
+	 //for loop control to make and output the operation chachoose();nges. the if/else condition is for formatting( Notice how choose() comes first for the first condition)( Also not sure if it's necessary)
+	printf("PL/0 code:\n\n");
+	for(i = 0; i < numOfInstructions; i++){
 
-     outputfile = fopen(OUT, "w"); //open output file to write out to file.
+		strcpy(instructionWord,opname(ir[i]));
 
- 	// print current contents of the instruction array to test
- 	printf("\n The following is the current instruction set:\n\n");
- 	for(i =0; i<numOfInstructions; i++)
-             printf(" \n\t Line %d contents: %d  %d  %d ", i+1, ir[i].op,  ir[i].l, ir[i].m);
+		//if we use STO or CAL, the level must be printed out differntly.
+		if (ir[i].op == 2) {
+			printf("%3d%5s\n",i, instructionWord, ir[i].m);
+		} else if (ir[i].op == 9){
+			printf("%3d%5s%10d\n",i, instructionWord, ir[i].m);
+		} else {
+			printf("%3d%5s%5d%5d\n",i, instructionWord, ir[i].l, ir[i].m);
+		}
+	}
+	//printf("Done\n" );
 
 
-		printf(" \n\n\n\n\n"); // print some space for the instructions
+
+	//////////////////////NEED EXECUTE loop
 
 
-//for loop control to make and output the operation changes. the if/else condition is for formatting( Notice how choose() comes first for the first condition)( Also not sure if it's necessary)
-    for(i=0; i< numOfInstructions; i++){
 
-        if(i==0){
-            choose();
-            fprintf(outputfile, "\n\n    %s    %d       %d    %d    %d    ", opname(ir[i].op), ir[i].l, pc, bp, sp);
-        }else{
-        fprintf(outputfile, "\n\n    %s    %d       %d    %d    %d    ", opname(ir[i].op), ir[i].l, pc, bp, sp);
-        choose();
-        }
+	/////////////////////////////////////
 
 	// innner for loop that outputs the current contents of the stack
-    for(temp=0; temp<17; temp++)
-    printf(" %d", stack[temp]);
-    printf(" \n");
+    for(temp=0; temp<17; temp++){
+    	printf(" %d", stack[temp]);
+    	printf(" \n");
     }// end of for loop control
 
 
@@ -463,8 +457,6 @@ void inc(){
  */
 void jmp(){
     pc = ir[i].m;
-
-
 }
 
 
@@ -526,15 +518,26 @@ void sio(){
  *
  *  returns a string of the operation name based on it's integer representation.
  */
-char *opname(int op){
+char *opname(instruction op){
 
-    switch (op){
+    switch (op.op){
         case 1:
             return "LIT";
             break;
 
         case 2:
-            return "OPR";
+            switch (op.l) {
+            	case 0:
+					return "RET";
+					break;
+				case 1:
+					return "NEG";
+					break;
+				//TODO: finish putting in all cases
+				default:
+					return "AAA";
+					break;
+            }
             break;
 
         case 3:
@@ -570,11 +573,11 @@ char *opname(int op){
             break;
 
         case 11:
-            return "SIO";
-            break;
+            return "HLT";
+        	exit(0);
 
         default:
+            return "HLT";
             exit(0);
-            break;
     }
 }
