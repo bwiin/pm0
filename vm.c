@@ -1,13 +1,27 @@
+/*
+ *
+ *
+ *
+ * Main things to know:
+ *
+ * -999 is the place in the stack that we place the separation for the new activation record. needs some touch up which I will be doing.
+ *
+ *
+ *
+ */
+
+
+
+
 #include <stdio.h>
 #include <string.h>
 #include<stdlib.h>
 
-// macros used( 2 of them(IN and OUT) are inserted via a shell script)
 #define MAX_STACK_HEIGHT 2000
 #define MAX_CODE_LENGTH 500
 #define MAX_LEXI_LEVELS 3
 #define OUT "trace.txt"
-#define IN "mcode.txt"   //<-- deprecated in development. Kept in case
+#define IN "mcode.txt"   //<-- output and input file names. Will be adjusted for final release( To accept arguments for passing in files
 
 
 //struct as outlined in the instructions.
@@ -21,12 +35,8 @@ typedef struct _instruction{
 
 // global variable declarations
 FILE *inputfile, *outputfile;
-// set the stack size
-int stack[MAX_STACK_HEIGHT];
-int test_set[3][17];
-// prevpc is used for the output format
-//numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
-int sp=0, bp = 1, pc = 0, temp = 0, numofinstructions = 0;
+int stack[MAX_STACK_HEIGHT];// set the stack size( Will be adjusted later since the stack doesn't need to be a global variable
+int sp=0, bp = 1, pc = 0, temp = 0, numofinstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
 int i = 0, scrap = 0;//possibly redundant variables. used for the loops.
 instruction ir[MAX_STACK_HEIGHT];
 
@@ -82,49 +92,29 @@ void main(){
     fclose(grabElements);
     //finish getting instructions, close file.
 
-	for(i = 0; i < numofinstructions; i++)// initialize all stack array members to 0
+	for(i = 0; i < numofinstructions; i++)// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
         stack[i]=0;
 
 
 
 
-     outputfile = fopen( OUT, "w"); // write out to file.
+     outputfile = fopen( OUT, "w"); //open output file to write out to file.
 
 
 
-
-/*
- *
-7 0 10
-7 0 2
-6 0 6
-1 0 13
-4 0 4
-1 0 1
-4 1 4
-1 0 7
-4 0 5                    current contents of the test_set array
-2 0 0
-6 0 6
-1 0 3
-4 0 4
-1 0 0
-4 0 5
-5 0 2
-2 0 0
- *
- *
- */
 
 	
 
- 	// print contents test
+ 	// print current contents of the instruction array to test
  	printf("\n The following is the current instruction set:\n\n");
  	for(i =0; i<numofinstructions; i++)
              printf(" \n\t Line %d contents: %d  %d  %d ", i+1, ir[i].op,  ir[i].l, ir[i].m); 
 
 
-//for loop control to output remaining portion of part 2 of the assignment.
+		printf(" \n\n\n\n\n"); // print some space for the instructions
+
+			
+//for loop control to make and output the operation changes. the if/else condition is for formatting( Notice how choose() comes first for the first condition)( Also not sure if it's necessary)
     for(i=0; i< numofinstructions; i++){
 
         if(i==0){
@@ -134,6 +124,8 @@ void main(){
         fprintf(outputfile, "\n\n    %s    %d       %d    %d    %d    ", opname(ir[i].op), ir[i].l, pc, bp, sp);
         choose();
         }
+
+	// innner for loop that outputs the current contents of the stack
     for(temp=0; temp<17; temp++)
     printf(" %d", stack[temp]);
     printf(" \n");
@@ -547,6 +539,8 @@ char *opname(int op){
             break;
     }
 }
+
+
 
 
 
