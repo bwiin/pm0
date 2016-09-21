@@ -55,8 +55,9 @@ void jpc();
 void sio();
 void lit();
 char *opname(instruction op);
-void choose();
+void chooseCorrectFunction();
 int commandParser(char *filename);
+void printTheStack();
 
 
 void main(int argc, char *argv[]){
@@ -70,35 +71,62 @@ void main(int argc, char *argv[]){
 		exit(-1);
 	}
 
-    for(i = 0; i < numOfInstructions; i++)// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
+    for(i = 0; i < numOfInstructions; i++){// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
 		stack[i]=0;
+	}
 
-	 //for loop control to make and output the operation chachoose();nges. the if/else condition is for formatting( Notice how choose() comes first for the first condition)( Also not sure if it's necessary)
 	printf("PL/0 code:\n\n");
 	for(i = 0; i < numOfInstructions; i++){
 
 		strcpy(instructionWord,opname(ir[i]));
 
 		//if we use STO or CAL, the level must be printed out differntly.
-		if (ir[i].op == 2) {
+		if (ir[i].op == 2 || ir[i].op == 9) {
 			printf("%3d%5s\n",i, instructionWord, ir[i].m);
-		} else if (ir[i].op == 9){
-			printf("%3d%5s%10d\n",i, instructionWord, ir[i].m);
+		} else if (ir[i].op == 4 || ir[i].op == 5 ){
+			printf("%3d%5s%5d%5d\n",i, instructionWord, ir[i].l,ir[i].m);
 		} else {
-			printf("%3d%5s%5d%5d\n",i, instructionWord, ir[i].l, ir[i].m);
+			printf("%3d%5s%10d\n",i, instructionWord, ir[i].m);
 		}
 	}
-	//printf("Done\n" );
+	printf("\n" );
 
 
+	///////////////////////////
+	////START EXECUTE LOOP/////
+	///////////////////////////
 
-	//////////////////////NEED EXECUTE loop
+	printf("Executon:\n");
+	printf("%24s%5s%5s%8s\n", "pc","bp","sp","stack");
+	for (i = 0; i < numOfInstructions; i++) {
+
+		strcpy(instructionWord,opname(ir[i]));
 
 
+		//printf("Instruction number: %d\n",i);
+		chooseCorrectFunction(); // <-----hangs here!!!!!!!!!!!!!!!!!!!!
 
-	/////////////////////////////////////
+		if (ir[i].op == 2 || ir[i].op == 9) {
+			printf("%3d%5s%5d%5d%6d%5d%5d", ir[i].m, instructionWord );
+			printTheStack();
+
+		} else if (ir[i].op == 4 || ir[i].op == 5){
+			printf("%3d%5s%5d%5d%6d%5d%5d",i, instructionWord, ir[i].m);
+			printTheStack();
+
+		} else {
+			printf("%3d%5s%10d%6d%5d%5d",i, instructionWord, ir[i].l, ir[i].m);
+			printTheStack();
+		}
+
+		//the formatting for the exection section is as follows
+		//printf("%3d%5s%5d%5d%6d%5d%5d");
+		//printTheStack();
+	}
 
 	// innner for loop that outputs the current contents of the stack
+
+
     for(temp=0; temp<17; temp++){
     	printf(" %d", stack[temp]);
     	printf(" \n");
@@ -106,6 +134,12 @@ void main(int argc, char *argv[]){
 
 
 
+
+}
+
+void printTheStack(){
+
+	printf("Print the STACK\n" );
 
 }
 
@@ -131,25 +165,16 @@ int commandParser(char *filename){
     }
 
     line = malloc(sizeof(char) * MAX_CODE_LENGTH + 1);
-
-
     temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
-    //printf("HEREss: \n");
-    //fflush(stdout);
-    //printf("sentence %s: \n", sentence );
+
 	if (temp == NULL) {
 		return -1;
 	}
 
-
     while (line != NULL && temp != NULL) {
-		//printf("LINE'%s'\n",line );
-		//fflush(stdout);
-
         token = strtok(line," ");
-		//printf("\ntokenREad=%s\n", token);
 		ir[numOfInstructions].op = atoi(token);
-		//n = atoi(token);
+
 		token = strtok(NULL," ");
 		ir[numOfInstructions].l = atoi(token);
 
@@ -160,9 +185,6 @@ int commandParser(char *filename){
 		numOfInstructions++;
     }
 
-
-
-    //free(temp);
 	free(line);
     fclose(fp);
 
@@ -205,7 +227,7 @@ int base(int base, int L){
  *
  *  initiates the appropriate function correlating to the appropriate op code.
  */
-void choose(){
+void chooseCorrectFunction(){
     switch (ir[i].op){
         case 1:
             lit();
@@ -585,7 +607,7 @@ char *opname(instruction op){
 
 				default:
 					return "HLT";
-					exit(-1);
+					break;
             }
             break;
 
@@ -614,7 +636,7 @@ char *opname(instruction op){
             break;
 
         case 9:
-            return "SIO";
+            return "HLT";
             break;
 
         case 10:
@@ -623,10 +645,10 @@ char *opname(instruction op){
 
         case 11:
             return "HLT";
-        	exit(0);
+        	break;
 
         default:
             return "HLT";
-            exit(-1);
+            break;
     }
 }
