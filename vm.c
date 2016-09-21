@@ -15,7 +15,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include<stdlib.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 #define MAX_STACK_HEIGHT 2000
 #define MAX_CODE_LENGTH 500
@@ -36,7 +38,7 @@ typedef struct _instruction{
 // global variable declarations
 FILE *inputfile, *outputfile;
 int stack[MAX_STACK_HEIGHT];// set the stack size( Will be adjusted later since the stack doesn't need to be a global variable
-int sp=0, bp = 1, pc = 0, temp = 0, numofinstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
+int sp=0, bp = 1, pc = 0, temp = 0, numOfInstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
 int i = 0, scrap = 0;//possibly redundant variables. used for the loops.
 instruction ir[MAX_STACK_HEIGHT];
 
@@ -44,26 +46,17 @@ instruction ir[MAX_STACK_HEIGHT];
 //function declarations.
 
 void opr();
-
 void lod();
-
 void sto();
-
 void cal();
-
 void inc();
-
 void jmp();
-
 void jpc();
-
 void sio();
-
 void lit();
-
 char *opname(int op);
-
 void choose();
+int commandParser(char *filename);
 
 
 
@@ -74,48 +67,34 @@ void choose();
 
 
 
-
-void main(){
-
-	
-
-	
-    // While loop that grabs the mcode and places it into the instruction register array
-    FILE* grabElements = fopen( IN, "r");
-    while(fscanf(grabElements, "%d", &ir[numofinstructions].op)!=EOF){
-        
-		
-	fscanf(grabElements, "%d", &ir[numofinstructions].l);
-	fscanf(grabElements, "%d", &ir[numofinstructions].m);
-	numofinstructions++;
-    }
-    fclose(grabElements);
-    //finish getting instructions, close file.
-
-	for(i = 0; i < numofinstructions; i++)// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
-        stack[i]=0;
+void main(int argc, char *argv[]){
+	int ret;
 
 
 
+	//function takes in the instruction file and populates the ir stack;
+	ret = commandParser(argv[1]);
+	if ( ret == -1){
+		exit(-1);
+	}
 
-     outputfile = fopen( OUT, "w"); //open output file to write out to file.
+    for(i = 0; i < numOfInstructions; i++)// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
+		stack[i]=0;
 
 
-
-
-	
+     outputfile = fopen(OUT, "w"); //open output file to write out to file.
 
  	// print current contents of the instruction array to test
  	printf("\n The following is the current instruction set:\n\n");
- 	for(i =0; i<numofinstructions; i++)
-             printf(" \n\t Line %d contents: %d  %d  %d ", i+1, ir[i].op,  ir[i].l, ir[i].m); 
+ 	for(i =0; i<numOfInstructions; i++)
+             printf(" \n\t Line %d contents: %d  %d  %d ", i+1, ir[i].op,  ir[i].l, ir[i].m);
 
 
 		printf(" \n\n\n\n\n"); // print some space for the instructions
 
-			
+
 //for loop control to make and output the operation changes. the if/else condition is for formatting( Notice how choose() comes first for the first condition)( Also not sure if it's necessary)
-    for(i=0; i< numofinstructions; i++){
+    for(i=0; i< numOfInstructions; i++){
 
         if(i==0){
             choose();
@@ -134,6 +113,67 @@ void main(){
 
 
 
+}
+
+//written by Ryan Hoeck
+//this function was taken and modified from one of my previous programs
+int commandParser(char *filename){
+	FILE *fp;
+    char *line;
+    char *temp;
+    char *token;
+	int n;
+
+
+    if (filename == NULL) {
+		perror("You did not input a filename\n");
+        return -1;
+    }
+
+    fp = fopen(filename,"r");
+    if (fp == NULL) {
+		perror("You did not input a valid filename\n");
+        return -1;
+    }
+
+    line = malloc(sizeof(char) * MAX_CODE_LENGTH + 1);
+
+
+    temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+    //printf("HEREss: \n");
+    //fflush(stdout);
+    //printf("sentence %s: \n", sentence );
+	if (temp == NULL) {
+		return -1;
+	}
+
+
+    while (line != NULL && temp != NULL) {
+		temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+		//printf("LINE'%s'\n",filename );
+		//fflush(stdout);
+
+        token = strtok(line," ");
+		//printf("\ntokenREad=%s\n", token);
+		ir[numOfInstructions].op = atoi(token);
+		//n = atoi(token);
+		token = strtok(NULL," ");
+		ir[numOfInstructions].l = atoi(token);
+
+		token = strtok(NULL," ");
+		ir[numOfInstructions].m = atoi(token);
+
+		temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+		numOfInstructions++;
+    }
+
+
+
+    //free(temp);
+	free(line);
+    fclose(fp);
+
+	return 0;
 }
 
 
@@ -315,7 +355,7 @@ void opr(){
         sp = sp - 1;
 
     }
-	
+
     if(ir[i].m == 11){
         stack[sp] =  ((stack[sp + 1] - stack[sp])>=0 ? 1 : 0);
         sp = sp - 1;
@@ -539,8 +579,3 @@ char *opname(int op){
             break;
     }
 }
-
-
-
-
-
