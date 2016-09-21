@@ -149,8 +149,7 @@ int commandParser(char *filename){
 
 
     while (line != NULL && temp != NULL) {
-		temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
-		//printf("LINE'%s'\n",filename );
+		//printf("LINE'%s'\n",line );
 		//fflush(stdout);
 
         token = strtok(line," ");
