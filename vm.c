@@ -530,13 +530,62 @@ char *opname(instruction op){
             	case 0:
 					return "RET";
 					break;
+
 				case 1:
 					return "NEG";
 					break;
-				//TODO: finish putting in all cases
-				default:
-					return "AAA";
+
+				case 2:
+					return "ADD";
 					break;
+
+				case 3:
+					return "SUB";
+					break;
+
+				case 4:
+					return "MUT";
+					break;
+
+				case 5:
+					return "DIV";
+					break;
+
+				case 6:
+					return "ODD";
+					break;
+
+				case 7:
+					return "MOD";
+					break;
+
+				case 8:
+					return "EQL";
+					break;
+
+				case 9:
+					return "NEQ";
+					break;
+
+				case 10:
+					return "LLS";
+					break;
+
+				case 11:
+					return "LEQ";
+					break;
+
+				case 12:
+					return "GTR";
+					break;
+
+				case 13:
+					return "GEQ";
+					break;
+
+				default:
+					return "HLT";
+					exit(-1);
             }
             break;
 
@@ -578,6 +627,6 @@ char *opname(instruction op){
 
         default:
             return "HLT";
-            exit(0);
+            exit(-1);
     }
 }
