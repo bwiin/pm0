@@ -1,4 +1,9 @@
 
+text/plain vm.c ( C source, ASCII text )
+
+
+
+
 #include <stdio.h>
 #include <string.h>
 #include<stdlib.h>
@@ -108,9 +113,7 @@ void main(){
                 fprintf(outputfile," %3d %s %2d %3d\n", i, opname(ir[i].op), ir[i].l, ir[i].m);
         }
         fprintf(outputfile,"\n\n");
-        fprintf(outputfile,"                pc  bp  sp  stack\nInitial values  %2d   %d  %2d\n", pc, bp, sp);
 	// end of printing the first portion
-	//
 	
 
 /*
@@ -126,6 +129,7 @@ void main(){
  * 
  * The if/else case is for error catching( But I dont think we have to have error test cases) 
  */
+	fprintf(outputfile,"                pc  bp  sp  stack\nInitial values  %2d   %d  %2d\n", pc, bp, sp);
 	while(bp>0){
 	if(pc < numofinstructions){
 	
@@ -134,12 +138,12 @@ void main(){
 	fetch();
 	choose();
 	fprintf(outputfile,"%3d %3d %3d  ", pc, bp, sp);
-	fprintf(outputfile,"\n");
 	outputstack(outputfile);
 	}else{
 	printf("\n\ncontrol goes here\n\n");
 	exit(1);
 	}
+	fprintf(outputfile,"\n");
 }
 
 
