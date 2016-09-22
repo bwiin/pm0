@@ -1,16 +1,10 @@
 /*
  *
- *
- *
  * Main things to know:
  *
  * -999 is the place in the stack that we place the separation for the new activation record. needs some touch up which I will be doing.
  *
- *
- *
  */
-
-
 
 
 #include <stdio.h>
@@ -63,8 +57,6 @@ void printTheStack();
 void main(int argc, char *argv[]){
 	int ret;
 
-
-
 	//function takes in the instruction file and populates the ir stack;
 	ret = commandParser(argv[1]);
 	if (ret == -1){
@@ -107,21 +99,22 @@ void main(int argc, char *argv[]){
 		chooseCorrectFunction(); // <-----hangs here!!!!!!!!!!!!!!!!!!!!
 
 		if (ir[i].op == 2 || ir[i].op == 9) {
-			printf("%3d%5s%5d%5d%6d%5d%5d", ir[i].m, instructionWord );
-			printTheStack();
+			//printf("%3d%5s%5d%5d%6d%5d%5d", ir[i].m, instructionWord );
+			//printTheStack();
 
 		} else if (ir[i].op == 4 || ir[i].op == 5){
-			printf("%3d%5s%5d%5d%6d%5d%5d",i, instructionWord, ir[i].m);
-			printTheStack();
+			//printf("%3d%5s%5d%5d%6d%5d%5d",i, instructionWord, ir[i].m);
+			//printTheStack();
 
 		} else {
-			printf("%3d%5s%10d%6d%5d%5d",i, instructionWord, ir[i].l, ir[i].m);
-			printTheStack();
+			//printf("%3d%5s%10d%6d%5d%5d",i, instructionWord, ir[i].l, ir[i].m);
+			//printTheStack();
 		}
 
 		//the formatting for the exection section is as follows
-		//printf("%3d%5s%5d%5d%6d%5d%5d");
+		printf("%3d%5s%5d%5d%6d%5d%5d\n",pc,instructionWord,ir[i].l,ir[i].m,pc,bp,sp);
 		//printTheStack();
+		pc++;
 	}
 
 	// innner for loop that outputs the current contents of the stack
@@ -131,8 +124,6 @@ void main(int argc, char *argv[]){
     	printf(" %d", stack[temp]);
     	printf(" \n");
     }// end of for loop control
-
-
 
 
 }
@@ -192,15 +183,6 @@ int commandParser(char *filename){
 }
 
 
-
-
-
-
-
-
-
-
-
 /*
  *
  *
@@ -228,59 +210,71 @@ int base(int base, int L){
  *  initiates the appropriate function correlating to the appropriate op code.
  */
 void chooseCorrectFunction(){
+
     switch (ir[i].op){
         case 1:
+			//printf("a\n");
             lit();
             break;
 
         case 2:
+		//	printf("b\n");
             opr();
             break;
 
         case 3:
+			//printf("c\n");
             lod();
             break;
 
         case 4:
+		//	printf("d\n");
             sto();
             break;
 
         case 5:
+			//printf("e\n");
             cal();
             break;
 
         case 6:
+			//printf("f\n");
             inc();
             break;
 
         case 7:
+			//printf("g\n");
             jmp();
             break;
 
         case 8:
+		//	printf("h\n");
             jpc();
             break;
 
         case 9:
+		//	printf("i\n");
             sio();
             break;
 
         case 10:
+			//printf("j\n");
             sio();
             break;
 
         case 11:
+			//printf("k\n");
             sio();
             break;
 
         default:
+			//printf("l\n");
             exit(0);
             break;
     }
 
 
 }
-
 
 
 /*
@@ -292,13 +286,9 @@ void chooseCorrectFunction(){
  */
 void lit(){
     sp = sp + 1;
-    stack[sp+1] = -999;
+    //stack[sp] = -999; //already incremented sp by 1
     stack[sp] = ir[i].m;
-    pc++;
 }
-
-
-
 
 /*
  *
@@ -316,7 +306,6 @@ void opr(){
         stack[sp + 1] = -999;
 
     }
-
 
     if(ir[i].m == 1){
         stack[sp] = -stack[sp];
@@ -401,11 +390,8 @@ void opr(){
  *  performs the LOD operation as outlined in the homework
  */
 void lod(){
-
     sp = sp + 1;
-    stack[sp+1] = -999;
-    stack[sp] = stack[ base(bp, ir[i].l) + ir[i].m];
-    pc++;
+    stack[sp] = stack[base(bp, ir[i].l) + ir[i].m];
 }
 
 
@@ -418,7 +404,7 @@ void lod(){
  */
 void sto(){
 
-    stack[ base(bp, ir[i].l) + ir[i].m] = stack[sp]; // remember that L is a global, so you only pass in bp
+	stack[base(bp, ir[i].l) + ir[i].m] = stack[sp]; // remember that L is a global, so you only pass in bp
     stack[sp+1] = 0;
     stack[sp] = -999;
     sp = sp - 1;
@@ -456,16 +442,8 @@ void cal(){
  */
 void inc(){
 
-
     sp = sp + ir[i].m;
 
-    if(stack[sp+1] != -999){
-
-    stack[sp-2]=0;
-    stack[sp+1]=-999;
-    }
-
-    pc++;
 }
 
 
@@ -498,7 +476,6 @@ void jpc(){
 
     sp = sp - 1;
 
-
 }
 
 
@@ -512,22 +489,20 @@ void jpc(){
  */
 void sio(){
 
-    if(ir[i].m == 1){
-        fprintf(stdout, "\n\n\t Contents: %d", stack[sp]);
+    if(ir[i].m == 0){
+        printf("%d\n", stack[sp]);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 2){
+    if(ir[i].m == 1){
         sp = sp + 1;
-        fscanf(stdin, "\n\n\t Please enter value: %d", &stack[sp]);
+        scanf("\n\n\t Please enter value: %d", &stack[sp]);
 
     }
 
-    if(ir[i].m == 3){
+    if(ir[i].m == 2){
         exit(1);
     }
-
-    pc++;
 
 }// end sio
 
@@ -636,7 +611,7 @@ char *opname(instruction op){
             break;
 
         case 9:
-            return "HLT";
+            return "OUT";
             break;
 
         case 10:
