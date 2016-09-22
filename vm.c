@@ -1,3 +1,10 @@
+Group 29
+-Alexander Dossantos
+-Brian Nguyen
+-Heather Connors
+-Ryan Hoeck
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -610,12 +617,14 @@ char *opname(instruction op){
         case 5:
             return "CAL";
             break;
+  GNU nano 2.7.0               File: collaboration.txt
 
-        case 6:
-            return "INC";
-            break;
+Group 29
+-Alexander Dossantos
+-Brian Nguyen
+-Heather Connors
+-Ryan Hoeck
 
-        case 7:
             return "JMP";
             break;
 

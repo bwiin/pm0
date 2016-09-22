@@ -1,0 +1,22 @@
+Group 29
+-Alexander Dossantos
+-Brian Nguyen
+-Heather Connors
+-Ryan Hoeck
+
+Alexander Dossantos:
+
+
+Brian Nguyen:
+
+
+Heather Connors:
+
+
+
+Ryan Hoeck: 
+Cleaned up and formatted the output, created a function to read in the 
+input file as a runtime arg, and expanded the opcode function, aswell as 
+small modifications over the file.
+
+
