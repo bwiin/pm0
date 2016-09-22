@@ -8,6 +8,9 @@ Alexander Dossantos:
 
 
 Brian Nguyen:
+Fixed few issues with output. 
+Added a personal take on the best whitespace.
+
 
 
 Heather Connors:
