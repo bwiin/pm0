@@ -170,25 +170,32 @@ int commandParser(char *filename){
 
 
     line = malloc(sizeof(char) * MAX_CODE_LENGTH + 1);
-    temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+    line = fgets(filename, MAX_CODE_LENGTH + 1, fp);
 
 
-	if (temp == NULL) {
+	if ( line == NULL) {
 		return -1;
 	}
 
-    while (line != NULL && temp != NULL) {
+    while (line != NULL) {
+		//printf("%s\n", token);
         token = strtok(line," ");
-		ir[numofinstructions].op = atoi(token);
+		if (token != NULL) {
+			ir[numofinstructions].op = atoi(token);
+		}
 
 		token = strtok(NULL," ");
-		ir[numofinstructions].l = atoi(token);
+		if (token != NULL) {
+			ir[numofinstructions].l = atoi(token);
+		}
 
 		token = strtok(NULL," ");
-		ir[numofinstructions].m = atoi(token);
+		if (token != NULL) {
+			ir[numofinstructions].m = atoi(token);
+		}
 
 
-		temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+		line = fgets(filename, MAX_CODE_LENGTH + 1, fp);
 		numofinstructions++;
     }
 
