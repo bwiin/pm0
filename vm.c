@@ -1,3 +1,13 @@
+// COP 3402
+// Fall 2016
+// Group 29
+
+//-Alexander Dossantos
+//-Brian Nguyen
+//-Heather Connors
+//-Ryan Hoeck
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
