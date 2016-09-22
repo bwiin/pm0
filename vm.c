@@ -1,9 +1,4 @@
 
-text/plain vm.c ( C source, ASCII text )
-
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include<stdlib.h>
