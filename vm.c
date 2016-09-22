@@ -1,12 +1,3 @@
-//Group 29
-//-Alexander Dossantos
-//-Brian Nguyen
-//-Heather Connors
-//-Ryan Hoeck
-
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -120,7 +111,7 @@ void main(int argc, char *argv[]){
  	printf("Execution:\n");
  	printf("%24s%5s%5s%8s\n", "pc","bp","sp","stack");
 	printf("%24d%5d%5d\n", pc, bp, sp);
-	while(bp>0 && halt != 1){
+	while(bp > 0 && halt != 1){
 		if(pc < numofinstructions){
 
 			fetch();
@@ -178,7 +169,6 @@ int commandParser(char *filename){
 	}
 
     while (line != NULL) {
-		//printf("%s\n", token);
         token = strtok(line," ");
 		if (token != NULL) {
 			ir[numofinstructions].op = atoi(token);
@@ -676,7 +666,7 @@ void outputstack(){
                 printf("| ");
                 bpCount--;
             }
-            printf("%-2d", stack[j]);
+            printf("%d ", stack[j]);
         }
 	//fprintf(fileTrace,"\n");
 }
