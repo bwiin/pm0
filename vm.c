@@ -1,12 +1,3 @@
-/*
- *
- * Main things to know:
- *
- * -999 is the place in the stack that we place the separation for the new activation record. needs some touch up which I will be doing.
- *
- */
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,10 +21,13 @@ typedef struct _instruction{
 }instruction;
 
 // global variable declarations
+FILE *inputfile, *outputfile;
 int stack[MAX_STACK_HEIGHT];// set the stack size( Will be adjusted later since the stack doesn't need to be a global variable
-int sp=0, bp = 1, pc = 0, temp = 0, numOfInstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
-int i = 0, scrap = 0;//possibly redundant variables. used for the loops.
-instruction ir[MAX_STACK_HEIGHT];
+int sp=0, bp = 1, pc = 0, temp = 0, numofinstructions = 0; //numofinstrcutions is used to determine the number of instructions. Temp is not completely necessary.
+int i = 0, scrap = 0, ncalls=0;//possibly redundant variables. used for the loops.
+int halt = 0;
+instruction ir[MAX_STACK_HEIGHT];//full set of instructions
+instruction cur_instr;//the current instruction being worked on
 char instructionWord[3];
 
 
@@ -49,13 +43,16 @@ void jpc();
 void sio();
 void lit();
 char *opname(instruction op);
-void chooseCorrectFunction();
+void choose();
 int commandParser(char *filename);
 void printTheStack();
+void fetch();
+void outputstack();
 
 
 void main(int argc, char *argv[]){
 	int ret;
+
 
 	//function takes in the instruction file and populates the ir stack;
 	ret = commandParser(argv[1]);
@@ -63,12 +60,24 @@ void main(int argc, char *argv[]){
 		exit(-1);
 	}
 
-    for(i = 0; i < numOfInstructions; i++){// initialize all stack array members to 0( Probably will be changed to only the first 3 positions.
-		stack[i]=0;
-	}
+	//initialize the stack
+	stack[0]=0;
+    stack[1]=0;
+	stack[2]=0;
 
-	printf("PL/0 code:\n\n");
-	for(i = 0; i < numOfInstructions; i++){
+ 	// print current contents of the instruction array for testing purposes (It prints to stdout
+ 	//printf("\n The following is the current instruction set:\n\n");
+ 	//	for(i =0; i<numofinstructions; i++){
+    //    printf(" \n\t Line %d contents: %3d  %2d  %3d ", i+1, ir[i].op,  ir[i].l, ir[i].m);
+	//}
+	//printf(" \n\n\n\n\n"); // print some space for the instructions
+	// end of test print
+
+	//outputfile = fopen( OUT, "w"); //open output file to write out to file.
+
+	// print out the first portion
+    printf("PL/0 code:\n\n");
+	for(i = 0; i < numofinstructions; i++){
 
 		strcpy(instructionWord,opname(ir[i]));
 
@@ -82,55 +91,51 @@ void main(int argc, char *argv[]){
 		}
 	}
 	printf("\n" );
+    //fprintf(outputfile,"\n\n");
+	// end of printing the first portion
 
 
-	///////////////////////////
-	////START EXECUTE LOOP/////
-	///////////////////////////
+/*
+ *
+ *
+ * The next portion outputs the remaining contents by doing the following in a loop:
+ *
+ * 1. print the current PC OP L M
+ * 2. perform the fetch cycle
+ * 3. perform the operation depending on the choice( based off the instruction)
+ * 4 output the PC BP SP for the output formatting
+ * 5. print the current stack state
+ *
+ * The if/else case is for error catching( But I dont think we have to have error test cases)
+ */
+ 	printf("Execution:\n");
+ 	printf("%24s%5s%5s%8s\n", "pc","bp","sp","stack");
+	printf("%24d%5d%5d\n", pc, bp, sp);
+	while(bp>0 && halt != 1){
+		if(pc < numofinstructions){
 
-	printf("Executon:\n");
-	printf("%24s%5s%5s%8s\n", "pc","bp","sp","stack");
-	for (i = 0; i < numOfInstructions; i++) {
+			fetch();
+			if (cur_instr.op == 5 || cur_instr.op == 4) {
+				printf("%3d%5s%5d%5d", pc-1, opname(ir[pc-1]), ir[pc-1].l, ir[pc-1].m);
+			} else if (cur_instr.op == 2 || cur_instr.op == 9){
+				printf("%3d%5s%10s", pc-1, opname(ir[pc-1]), " ");
+			} else {
+				printf("%3d%5s%10d", pc-1, opname(ir[pc-1]), ir[pc-1].m);
+			}
 
-		strcpy(instructionWord,opname(ir[i]));
-
-
-		//printf("Instruction number: %d\n",i);
-		chooseCorrectFunction(); // <-----hangs here!!!!!!!!!!!!!!!!!!!!
-
-		if (ir[i].op == 2 || ir[i].op == 9) {
-			//printf("%3d%5s%5d%5d%6d%5d%5d", ir[i].m, instructionWord );
-			//printTheStack();
-
-		} else if (ir[i].op == 4 || ir[i].op == 5){
-			//printf("%3d%5s%5d%5d%6d%5d%5d",i, instructionWord, ir[i].m);
-			//printTheStack();
-
+			choose();
+			printf("%6d%5d%5d   ", pc, bp, sp);
+			outputstack(outputfile);
 		} else {
-			//printf("%3d%5s%10d%6d%5d%5d",i, instructionWord, ir[i].l, ir[i].m);
-			//printTheStack();
+			printf("\n\ncontrol goes here\n\n");
+			exit(1);
 		}
 
-		//the formatting for the exection section is as follows
-		printf("%3d%5s%5d%5d%6d%5d%5d\n",pc,instructionWord,ir[i].l,ir[i].m,pc,bp,sp);
-		//printTheStack();
-		pc++;
-	}
-
-	// innner for loop that outputs the current contents of the stack
-
-
-    for(temp=0; temp<17; temp++){
-    	printf(" %d", stack[temp]);
-    	printf(" \n");
-    }// end of for loop control
-
-
+	printf("\n");
 }
 
-void printTheStack(){
 
-	printf("Print the STACK\n" );
+
 
 }
 
@@ -143,7 +148,6 @@ int commandParser(char *filename){
     char *token;
 	int n;
 
-
     if (filename == NULL) {
 		perror("You did not input a filename\n");
         return -1;
@@ -155,8 +159,10 @@ int commandParser(char *filename){
         return -1;
     }
 
+
     line = malloc(sizeof(char) * MAX_CODE_LENGTH + 1);
     temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
+
 
 	if (temp == NULL) {
 		return -1;
@@ -164,22 +170,31 @@ int commandParser(char *filename){
 
     while (line != NULL && temp != NULL) {
         token = strtok(line," ");
-		ir[numOfInstructions].op = atoi(token);
+		ir[numofinstructions].op = atoi(token);
 
 		token = strtok(NULL," ");
-		ir[numOfInstructions].l = atoi(token);
+		ir[numofinstructions].l = atoi(token);
 
 		token = strtok(NULL," ");
-		ir[numOfInstructions].m = atoi(token);
+		ir[numofinstructions].m = atoi(token);
+
 
 		temp = fgets(line, MAX_CODE_LENGTH + 1, fp);
-		numOfInstructions++;
+		numofinstructions++;
     }
 
 	free(line);
     fclose(fp);
 
 	return 0;
+}
+
+/*
+ * fetch function
+ */
+void fetch(){
+        cur_instr = ir[pc];
+        pc++;
 }
 
 
@@ -209,9 +224,9 @@ int base(int base, int L){
  *
  *  initiates the appropriate function correlating to the appropriate op code.
  */
-void chooseCorrectFunction(){
+void choose(){
+    switch (cur_instr.op){
 
-    switch (ir[i].op){
         case 1:
 			//printf("a\n");
             lit();
@@ -269,6 +284,7 @@ void chooseCorrectFunction(){
 
         default:
 			//printf("l\n");
+			halt = 1;
             exit(0);
             break;
     }
@@ -285,9 +301,8 @@ void chooseCorrectFunction(){
  *  performs the LIT operation as outlined in the homework
  */
 void lit(){
-    sp = sp + 1;
-    //stack[sp] = -999; //already incremented sp by 1
-    stack[sp] = ir[i].m;
+    sp++;
+    stack[sp] = cur_instr.m;
 }
 
 /*
@@ -299,83 +314,83 @@ void lit(){
  */
 void opr(){
 
-    if(ir[i].m == 0){
+    if(cur_instr.m == 0){
         sp = bp - 1;
         bp = stack[sp + 3];
         pc = stack[sp + 4];
-        stack[sp + 1] = -999;
 
     }
 
-    if(ir[i].m == 1){
+
+    if(cur_instr.m == 1){
         stack[sp] = -stack[sp];
     }
 
-    if(ir[i].m == 2){
+    if(cur_instr.m == 2){
         stack[sp] = stack[sp] + stack[sp + 1];
         sp = sp - 1;
     }
 
-    if(ir[i].m == 3){
+    if(cur_instr.m == 3){
         stack[sp] = stack[sp] - stack[sp + 1];
         sp = sp - 1;
     }
 
 
-    if(ir[i].m == 4){
+    if(cur_instr.m == 4){
         stack[sp] = stack[sp] * stack[sp + 1];
         sp = sp - 1;
     }
 
-    if(ir[i].m == 5){
+    if(cur_instr.m == 5){
         stack[sp] = stack[sp] / stack[sp + 1];
         sp = sp - 1;
     }
 
-    if(ir[i].m == 6){
+    if(cur_instr.m == 6){
         stack[sp] = stack[sp] % 2;
 
     }
 
-    if(ir[i].m == 7){
+    if(cur_instr.m == 7){
 
         stack[sp] = stack[sp] % stack[sp + 1];
         sp = sp - 1;
 
     }
 
-    if(ir[i].m == 8){
+    if(cur_instr.m == 8){
         stack[sp] =  ((stack[sp] == stack[sp + 1]) ? 1 : 0);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 9){
+    if(cur_instr.m == 9){
         stack[sp] =  ((stack[sp] != stack[sp + 1]) ? 1 : 0);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 10){
+    if(cur_instr.m == 10){
         stack[sp] =  ((stack[sp + 1] - stack[sp])>0 ? 1 : 0);
         sp = sp - 1;
 
     }
 
-    if(ir[i].m == 11){
+    if(cur_instr.m == 11){
         stack[sp] =  ((stack[sp + 1] - stack[sp])>=0 ? 1 : 0);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 12){
+    if(cur_instr.m == 12){
         stack[sp] =  (stack[sp] - (stack[sp + 1])>0 ? 1 : 0);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 13){
+    if(cur_instr.m == 13){
         stack[sp] =  (stack[sp] - (stack[sp + 1])>=0 ? 1 : 0);
         sp = sp - 1;
     }
 
-    if(ir[i].m != 0)
+    if(cur_instr.m != 0)
         pc++;
 
 }
@@ -391,7 +406,8 @@ void opr(){
  */
 void lod(){
     sp = sp + 1;
-    stack[sp] = stack[base(bp, ir[i].l) + ir[i].m];
+    stack[sp] = stack[ base(bp, cur_instr.l) + cur_instr.m];
+    pc++;
 }
 
 
@@ -403,14 +419,12 @@ void lod(){
  *  performs the STO operation as outlined in the homework
  */
 void sto(){
-
-	stack[base(bp, ir[i].l) + ir[i].m] = stack[sp]; // remember that L is a global, so you only pass in bp
-    stack[sp+1] = 0;
-    stack[sp] = -999;
-    sp = sp - 1;
-
-    pc++;
+    stack[ base(bp, cur_instr.l) + cur_instr.m] = stack[sp];
+    sp--;
 }
+
+
+
 /*
  *
  *
@@ -420,13 +434,13 @@ void sto(){
  */
 void cal(){
 
-    stack[sp + 1] = 5; // space to return value (FV)
-    stack[sp + 2] = base(bp, ir[i].l); // static link (SL)
+    ncalls++;
+    stack[sp + 1] = 0; // space to return value (FV)
+    stack[sp + 2] = base(bp, cur_instr.l); // static link (SL)
     stack[sp + 3] = bp; // dynamic link (DL)
-    stack[sp + 4] = pc+1; // return address (RA)
-    stack[sp + 7] = -999;//new end index
+    stack[sp + 4] = pc; // return address (RA)
     bp = sp + 1;
-    pc = ir[i].m;
+    pc = cur_instr.m;
 
 
 }
@@ -436,13 +450,14 @@ void cal(){
 /*
  *
  *
+ *
  * inc
  *
  *  performs the INC operation as outlined in the homework
  */
 void inc(){
 
-    sp = sp + ir[i].m;
+    sp+= cur_instr.m;
 
 }
 
@@ -456,7 +471,9 @@ void inc(){
  *  performs the JMP operation as outlined in the homework
  */
 void jmp(){
-    pc = ir[i].m;
+
+    pc = cur_instr.m;
+
 }
 
 
@@ -469,12 +486,9 @@ void jmp(){
  */
 void jpc(){
 
-    if (stack[sp] == 0){
-        pc = ir[i].m;
-    }else
-        pc++;
-
-    sp = sp - 1;
+    if (stack[sp] == 0)
+        pc = cur_instr.m;
+    sp--;
 
 }
 
@@ -489,19 +503,18 @@ void jpc(){
  */
 void sio(){
 
-    if(ir[i].m == 0){
-        printf("%d\n", stack[sp]);
+    if(cur_instr.m == 0){
+        printf("\n\n\t Contents: %d", stack[sp]);
         sp = sp - 1;
     }
 
-    if(ir[i].m == 1){
-        sp = sp + 1;
-        scanf("\n\n\t Please enter value: %d", &stack[sp]);
-
+    if(cur_instr.m == 1){
+        scanf("\n\n\t Please enter value: %d", &stack[sp+1]);
+	sp++;
     }
 
-    if(ir[i].m == 2){
-        exit(1);
+    if(cur_instr.m == 2){
+        halt = 1;
     }
 
 }// end sio
@@ -611,19 +624,43 @@ char *opname(instruction op){
             break;
 
         case 9:
-            return "OUT";
-            break;
-
-        case 10:
-            return "SIO";
-            break;
-
-        case 11:
             return "HLT";
-        	break;
+            break;
 
         default:
             return "HLT";
             break;
     }
+}
+
+
+/*
+ *
+ * Prints the current stack contents with proper formatting
+ *
+ *
+ */
+void outputstack(){
+        int tempBp = bp;
+        int bpCount = 1;
+        int levels[MAX_LEXI_LEVELS];
+        int j = 1;
+        levels[0] = 1;
+
+        while (tempBp > 1){
+        levels[j++] = tempBp;
+        tempBp = stack[tempBp + 2];
+        }
+    bpCount = j-1;
+    if(bpCount > MAX_LEXI_LEVELS){
+        printf("\nError: :: ");
+    }
+        for(i = j; j <= sp; j++) {
+            if (j == levels[bpCount] && j != 1) {
+                printf("| ");
+                bpCount--;
+            }
+            printf("%-2d", stack[j]);
+        }
+	//fprintf(fileTrace,"\n");
 }
